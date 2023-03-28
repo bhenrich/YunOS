@@ -1,23 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "E:\\C# To-Go\\YunOS\\YunOS.csproj": {}
+    "C:\\Users\\Benja\\Desktop\\Code\\.git-clones\\YunOS\\YunOS.csproj": {}
   },
   "projects": {
-    "E:\\C# To-Go\\YunOS\\YunOS.csproj": {
+    "C:\\Users\\Benja\\Desktop\\Code\\.git-clones\\YunOS\\YunOS.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\C# To-Go\\YunOS\\YunOS.csproj",
+        "projectUniqueName": "C:\\Users\\Benja\\Desktop\\Code\\.git-clones\\YunOS\\YunOS.csproj",
         "projectName": "YunOS",
-        "projectPath": "E:\\C# To-Go\\YunOS\\YunOS.csproj",
-        "packagesPath": "C:\\Users\\Benjamin Henrich\\.nuget\\packages\\",
-        "outputPath": "E:\\C# To-Go\\YunOS\\obj\\",
+        "projectPath": "C:\\Users\\Benja\\Desktop\\Code\\.git-clones\\YunOS\\YunOS.csproj",
+        "packagesPath": "C:\\Users\\Benja\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Benja\\Desktop\\Code\\.git-clones\\YunOS\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Benjamin Henrich\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Benja\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -25,7 +26,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Users\\Benjamin Henrich\\AppData\\Roaming\\NuGet\\Newtonsoft.Json": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -54,12 +54,31 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
+              "version": "[7.0.4, 7.0.4]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Runtime.win-x64",
+              "version": "[7.0.4, 7.0.4]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
+              "version": "[7.0.4, 7.0.4]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.200\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "win-x64": {
+          "#import": []
         }
       }
     }
