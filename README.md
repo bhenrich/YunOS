@@ -9,7 +9,6 @@ An emulated Linux-Style Subsystem for Windows.
   * [2. Adding yunos.exe to PATH.](#2-adding-yunosexe-to-path)
   * [3. Restart your shell.](#3-restart-your-shell)
   * [4. First-Time Setup.](#4-first-time-setup)
-  * [Should you run into any problems during the install process, or while using dShell, write an E-Mail to our support.](#should-you-run-into-any-problems-during-the-install-process-or-while-using-dshell-write-an-e-mail-to-our-support)
 - [Changelog & Roadmap](#changelog--roadmap)
   * [Planned for the next Release](#planned-for-the-next-release)
   * [03/23/2023 - v0.1](#03232023---v01)
