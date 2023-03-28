@@ -27,8 +27,9 @@ namespace YunOS
         static string[] cache = new String[99];
         static int yunScriptLineNum = 0;
         static string _username;
-        static string pypath = "C:\\yunos\\exe\\python\\python.exe";
-        static string nodepath = "C:\\yunos\\exe\\node\\node-v18.15.0-win-x64\\node.exe";
+        static string syspath = "C:\\yunos\\";
+        static string pypath = syspath + "exe\\python\\python.exe";
+        static string nodepath = syspath + "exe\\node\\node-v18.15.0-win-x64\\node.exe";
 
         public static void Main(string[] args)
         {
@@ -37,13 +38,11 @@ namespace YunOS
             checkifSetup();
         }
 
-        static void throwError(string cmd = "")
+        static void throwError(string cmd = "An unexpected error occurred.")
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine();
-            Console.WriteLine($"Error: {cmd}");
+            Console.WriteLine($"\nError: {cmd}\n");
             Console.ResetColor();
-            Console.WriteLine();
 
         }
 
@@ -69,10 +68,29 @@ namespace YunOS
             Console.Write("Username: ");
             _username = Console.ReadLine();
             Console.Write("Password: ");
-            Console.ForegroundColor = ConsoleColor.Black;
-            Console.BackgroundColor = ConsoleColor.Black;
-            string _password = Console.ReadLine();
-            Console.ResetColor();
+            StringBuilder passwordBuilder = new StringBuilder();
+            bool reading = true;
+            while(reading) {
+                ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+                char entered = keyInfo.KeyChar;
+                switch (entered)
+                {
+                    case '\b':
+                        if (passwordBuilder.Length == 0) break;
+                        Console.Write(entered + " " + entered);
+                        passwordBuilder.Length--;
+                        break;
+                    case '\r':
+                        reading = false;
+                        break;
+                    default:
+                        Console.Write('*');
+                        passwordBuilder.Append(entered.ToString());
+                        break;
+                }
+            }
+            Console.WriteLine();
+            string _password = passwordBuilder.ToString();
 
             if (File.Exists($"C:\\yunos\\{_username}.yuser"))
             {
@@ -86,14 +104,14 @@ namespace YunOS
                 }
                 else
                 {
-                    Console.WriteLine("Incorrect username or password.");
+                    throwError("Incorrect username or password.");
                     Console.WriteLine();
                     login();
                 }
             }
             else
             {
-                Console.WriteLine("Incorrect username or password.");
+                throwError("Incorrect username or password.");
                 Console.WriteLine();
                 login();
             }
@@ -160,6 +178,9 @@ namespace YunOS
                     Console.WriteLine("Unpacking Python 3.10...");
                     ZipFile.ExtractToDirectory("C:\\yunos\\exe\\py-package.zip", "C:\\yunos\\exe\\python");
                     Console.WriteLine("Sucessfully installed Python 3.10!");
+                } else {
+                    Console.WriteLine("Skipping Python Installation...");
+                    Directory.Delete(pypath.Substring(0, pypath.Length-10));
                 }
                 Console.WriteLine();
 
@@ -177,6 +198,9 @@ namespace YunOS
                     Console.WriteLine("Unpacking NodeJS LTS 18.15.0...");
                     ZipFile.ExtractToDirectory("C:\\yunos\\exe\\node-package.zip", "C:\\yunos\\exe\\node");
                     Console.WriteLine("Sucessfully installed NodeJS LTS 18.15.0!");
+                } else {
+                    Console.WriteLine("Skipping NodeJS Installation...");
+                    Directory.Delete(nodepath.Substring(0, nodepath.Length-30));
                 }
                 Console.WriteLine();
 
@@ -232,7 +256,7 @@ namespace YunOS
             while (true)
             {
                 string dir = Directory.GetCurrentDirectory().ToString();
-                Console.Write($"[{dir.Substring(3)}] YunOS> ");
+                Console.Write($"[{dir.Substring(3)}] {_username}@YunOS> ");
                 string input = Console.ReadLine();
                 parseInput(input);
             }
@@ -273,7 +297,7 @@ namespace YunOS
                     Console.WriteLine("\tpwd - Displays the current directory");
                     Console.WriteLine("\tdate - Displays the current date and time");
                     Console.WriteLine("\trun - runs a .yun applet");
-                    Console.WriteLine("\tpy - runs a python3 script");
+                    Console.WriteLine("\tpython - runs a python3 script");
                     Console.WriteLine("\tnode - runs a nodejs script");
                     Console.WriteLine("\t\r\n--- YunScript Specific Commands---\r\n");
                     Console.WriteLine("\tmath - performs simple mathematical equasions");
@@ -387,13 +411,17 @@ namespace YunOS
                                 Console.WriteLine("run - Runs a .yun applet");
                                 Console.WriteLine("Usage: run <file name>");
                                 break;
-                            case "py":
-                                Console.WriteLine("py - Runs a python3 script");
-                                Console.WriteLine("Usage: py <file name>");
+                            case "python":
+                                Console.WriteLine("python - Runs a python3 script");
+                                Console.WriteLine("Usage: python <file name>");
                                 break;
                             case "node":
                                 Console.WriteLine("node - Runs a nodejs script");
                                 Console.WriteLine("Usage: node <file name>");
+                                break;
+                            case "reset":
+                                Console.WriteLine("reset - Deletes the C:\\yunos Directory.");
+                                Console.WriteLine("Usage: reset (confirm)");
                                 break;
                             case "math":
                                 Console.WriteLine("math - Performs a math operation");
@@ -709,7 +737,7 @@ namespace YunOS
                     else
                         throwError("No filename given - see 'man edit'");
                     break;
-                case "py":
+                case "python":
                     if (args.Length > 1)
                     {
                         if (File.Exists(args[1]))
@@ -779,6 +807,15 @@ namespace YunOS
                         runApplet(args[1]);
                     else
                         throwError("No file specified.");
+                    break;
+                case "reset":
+                    if (args.Length == 2 && args[1].ToLower().Equals("confirm")) {
+                        Directory.SetCurrentDirectory("C:\\");
+                        Directory.Delete(syspath, true);
+                        Console.WriteLine("Deleting C:\\yunos\\... See you next time!");
+                        System.Environment.Exit(0);
+                    }
+                    else Console.WriteLine("WARNING! This command will erase the C:\\yunos\\ Directory! To confirm this, please run \"reset confirm\"!");
                     break;
                 default:
                     if (File.Exists(args[0]))
@@ -1062,7 +1099,7 @@ namespace YunOS
                     else
                         throwError("No filename given - see 'man edit'");
                     break;
-                case "py":
+                case "python":
                     if (line.Length > 1)
                     {
                         if (File.Exists(line[1]))
