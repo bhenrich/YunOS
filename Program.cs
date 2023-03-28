@@ -207,7 +207,7 @@ namespace YunOS
                 File.Create("C:\\yunos\\root.yuser").Close();
                 File.WriteAllText("C:\\yunos\\root.yuser", ShaEncrypt("default").ToLower());
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("\r\nFirst-Time Setup successful.\r\nDefault login: root@default.\r\nPlease delete the default root user after logging in, and create your own user using the 'newuser' command.\r\nFor a list of commands, type 'help', for instructions on how to use a command type 'man <command>'.\r\n\r\n");
+                Console.WriteLine("\r\nFirst-Time Setup successful.\r\nDefault login: [Username: root] [Password: default].\r\nPlease delete the default root user after logging in, and create your own user using the 'newuser' command.\r\nFor a list of commands, type 'help', for instructions on how to use a command type 'man <command>'.\r\n\r\n");
                 Console.ResetColor();
             }
             resetConsoleFirst();
@@ -417,34 +417,44 @@ namespace YunOS
                     }
                     break;
                 case "newuser":
-                    if (!File.Exists($"C:\\yunos\\{args[1]}.yuser"))
+                    if(args.Length > 2)
                     {
-                        File.Create($"C:\\yunos\\{args[1]}.yuser").Close();
-                        File.WriteAllText($"C:\\yunos\\{args[1]}.yuser", ShaEncrypt(args[2]).ToLower());
+                        if (!File.Exists($"C:\\yunos\\{args[1]}.yuser"))
+                        {
+                            File.Create($"C:\\yunos\\{args[1]}.yuser").Close();
+                            File.WriteAllText($"C:\\yunos\\{args[1]}.yuser", ShaEncrypt(args[2]).ToLower());
 
-                        Directory.CreateDirectory($"C:\\yunos\\{args[1]}");
-                        Directory.CreateDirectory($"C:\\yunos\\{args[1]}\\home");
+                            Directory.CreateDirectory($"C:\\yunos\\{args[1]}");
+                            Directory.CreateDirectory($"C:\\yunos\\{args[1]}\\home");
 
-                        Console.WriteLine("User created successfully! Please restart YunOS");
-                    }
-                    else
-                    {
-                        Console.WriteLine("User already exists!");
+                            Console.WriteLine("User created successfully! Please restart YunOS");
+                        }
+                        else
+                        {
+                            Console.WriteLine("User already exists!");
+                        }
+                    } else {
+                        throwError("newuser requires two arguments - see 'man newuser'");
                     }
                     break;
 
                 case "remuser":
-                    if (File.Exists($"C:\\yunos\\{args[1]}.yuser"))
+                    if(args.Length > 1)
                     {
-                        File.Delete($"C:\\yunos\\{args[1]}.yuser");
+                        if (File.Exists($"C:\\yunos\\{args[1]}.yuser"))
+                        {
+                            File.Delete($"C:\\yunos\\{args[1]}.yuser");
 
-                        Directory.Delete($"C:\\yunos\\{args[1]}", true);
+                            Directory.Delete($"C:\\yunos\\{args[1]}", true);
 
-                        Console.WriteLine("User deleted successfully!");
-                    }
-                    else
-                    {
-                        Console.WriteLine("User doesn't exist!");
+                            Console.WriteLine("User deleted successfully!");
+                        }
+                        else
+                        {
+                            Console.WriteLine("User doesn't exist!");
+                        }
+                    } else {
+                        throwError("remuser requires one argument - see 'man remuser'");
                     }
                     break;
 
@@ -765,7 +775,7 @@ namespace YunOS
                         Console.WriteLine(DateTime.Now.ToString());
                     break;
                 case "run":
-                    if (args.Length > 1)
+                    if (args.Length > 1 && args[1].EndsWith(".yun"))
                         runApplet(args[1]);
                     else
                         throwError("No file specified.");
@@ -799,7 +809,6 @@ namespace YunOS
 
         static void runCommand(string[] line, int lineNum, string _file)
         {
-            // read commands from a line like a little scripting language
             switch (line[0].Trim())
             {
                 case "exit":
