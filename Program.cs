@@ -59,8 +59,8 @@ namespace YunOS
             {"pwd", "Displays the current directory"},
             {"date", "Displays the current date and time"},
             {"run", "runs a .yun applet%run <file>"},
-            {"python", "runs a python3 script%python <file>"},
-            {"node", "runs a nodejs script%node <file>"},
+            {"python", "execute a python Command%python <file>"},
+            {"node", "execute a node Command%node <file>"},
         };
 
         public static void Main(string[] args)
@@ -214,9 +214,7 @@ namespace YunOS
                 }
                 Console.WriteLine();
                 createUser("root", ShaEncrypt(passwordBuilder.ToString()).ToLower());
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("\nFirst-Time Setup successful.\nYou may now login.\nIt is recommended to create another User, however, this is not necessary.\nFor a list of commands, type 'help', for instructions on how to use a command type 'man <command>'.\n");
-                Console.ResetColor();
+                throwSuccess("\nFirst-Time Setup successful.\nYou may now login.\nIt is recommended to create another User, however, this is not necessary.\nFor a list of commands, type 'help', for instructions on how to use a command type 'man <command>'.\n");
             }
             else
             {
@@ -410,7 +408,6 @@ namespace YunOS
                                 throwError("User partially deleted. Some files may be in use.");
                                 break;
                             }
-                            Console.ForegroundColor = ConsoleColor.Green;
                             throwSuccess("Successfully deleted User.");
                         }
                         else
@@ -675,16 +672,24 @@ namespace YunOS
                     break;
                 case "node":
                 case "python":
-                    if (args.Length == 1)
+                    string epath = (cmd == "node" ? nodepath : pypath);
+                    if(!File.Exists(epath))
                     {
+                        throwError($"{cmd} is not Installed.");
+                        break;
+                    }
+
+                    if (args.Length == 1 && File.Exists(epath))
+                    {
+                        
                         if (File.Exists(args[0]))
-                            runProcess((cmd == "node" ? nodepath : pypath), $"\"{Directory.GetCurrentDirectory() + "\\" + args[0]}\"");
+                            runProcess(epath, $"\"{Directory.GetCurrentDirectory() + "\\" + args[0]}\"");
                         else
-                            throwError("File not found.");
+                            throwError($"File not found.");
                     }
                     else
                         // Interactive Shell
-                        runProcess(cmd,null,true);
+                        runProcess(epath,null,true);
                     break;
                 case "rename":
                 case "mv":
@@ -1365,8 +1370,8 @@ namespace YunOS
             if(announceExit)
             {
                 int exitCode = process.ExitCode;
-                if (exitCode != 0)
-                    Console.Write("\nProgram exited with Exit Code 0.");
+                if (exitCode == 0)
+                    Console.WriteLine("\nProgram exited with Exit Code 0.\n");
                 else
                     throwError($"Program exited with Exit Code {exitCode}.");
 
