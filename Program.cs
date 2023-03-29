@@ -177,20 +177,12 @@ namespace YunOS
 
                 if (prompt("Would you like to install Python (3.10)?", ConsoleColor.Yellow))
                     installProgram("https://www.python.org/ftp/python/3.10.10/python-3.10.10-embed-amd64.zip", pypath.Substring(0, pypath.Length-10), "Python", true);
-<<<<<<< HEAD
                 else
-=======
-                else 
->>>>>>> ff1c9d173fef4976500179388addc7b02a8516ea
                     Console.WriteLine("Skipping Python Installation...");
 
                 if (prompt("Would you like to install NodeJS 18.15.0?", ConsoleColor.Yellow))
                     installProgram("https://nodejs.org/dist/v18.15.0/node-v18.15.0-win-x64.zip", nodepath.Substring(0, nodepath.Length-30), "NodeJS", true);
-<<<<<<< HEAD
                 else
-=======
-                else 
->>>>>>> ff1c9d173fef4976500179388addc7b02a8516ea
                     Console.WriteLine("Skipping NodeJS Installation...");
                 Console.WriteLine();
 
@@ -299,11 +291,7 @@ namespace YunOS
                     Console.ForegroundColor = ConsoleColor.DarkGray;
                     Console.WriteLine();
 
-<<<<<<< HEAD
                     foreach(var pair in commands)
-=======
-                    foreach(var pair in commands) 
->>>>>>> ff1c9d173fef4976500179388addc7b02a8516ea
                         Console.WriteLine($"\t{pair.Key} - {pair.Value}");
 
                     Console.WriteLine("\t\r\n--- YunScript Specific Commands---\r\n");
@@ -466,11 +454,7 @@ namespace YunOS
                         }
                         else
                             Console.WriteLine("User already exists!");
-<<<<<<< HEAD
                     }
-=======
-                    } 
->>>>>>> ff1c9d173fef4976500179388addc7b02a8516ea
                     else
                         throwError("newuser requires two arguments - see 'man newuser'");
                     break;
@@ -827,7 +811,7 @@ namespace YunOS
                     else Console.WriteLine("WARNING! This command will erase the C:\\yunos\\ Directory! To confirm this, please run \"reset confirm\"!");
                     break;
                 default:
-                    if (File.Exists(args[0])) 
+                    if (File.Exists(args[0]))
                     {
                         var proc = Process.Start($"{Directory.GetCurrentDirectory() + "\\" + args[0]}");
                         proc.WaitForExit();
@@ -1421,11 +1405,7 @@ namespace YunOS
         {
             WebClient client = new WebClient();
             Console.Write($"Downloading {name}...");
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> ff1c9d173fef4976500179388addc7b02a8516ea
             string destination = temppath + "\\temp.zip";
             if(!zip) destination = $"{path}\\{name}.exe";
 
@@ -1435,11 +1415,7 @@ namespace YunOS
                 Console.Write(".");
                 Thread.Sleep(100);
             }
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> ff1c9d173fef4976500179388addc7b02a8516ea
             client.Dispose();
 
             if(zip)
@@ -1463,15 +1439,9 @@ namespace YunOS
             if(announceExit)
             {
                 int exitCode = process.ExitCode;
-<<<<<<< HEAD
                 if (exitCode != 0)
                     Console.Write("\nProgram exited with Exit Code 0.");
                 else
-=======
-                if (exitCode != 0) 
-                    Console.Write("\nProgram exited with Exit Code 0.");
-                else 
->>>>>>> ff1c9d173fef4976500179388addc7b02a8516ea
                     throwError($"Program exited with Exit Code {exitCode}.");
 
             }
