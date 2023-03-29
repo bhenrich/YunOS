@@ -14,7 +14,7 @@ An emulated Linux-Style Subsystem for Windows.
   * [03/23/2023 - v0.1](#03232023---v01)
 ---
 Heads up. This project is made for me to learn more about C#. It's not meant for actual, practical use. See it as some sort of toy.
-This project has been made by Benjamin "YuNii" Henrich.
+This project has been made by Benjamin "YuNii" Henrich, with numerous contributions from [GeoBaer24](https://github.com/geobaer24)
 
 ## Features
 - Full Linux-Style Commandline
