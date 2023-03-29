@@ -33,34 +33,34 @@ namespace YunOS
         static string nodepath = syspath + "exe\\node\\node-v18.15.0-win-x64\\node.exe";
         static string temppath = syspath + "temp";
         static Dictionary<string, string> commands = new Dictionary<string, string>(){
-            {"help", "Displays this message"},
-            {"man", "Displays the manual for a command"},
-            {"newuser", "Creates a new user"},
-            {"remuser", "Deletes a user and home directory"},
+            {"help", "Displays a list of Commands"},
+            {"man", "Displays the manual for a command%man <command>"},
+            {"newuser", "Creates a new user%newuser <username>"},
+            {"remuser", "Deletes a user and home directory%remuser <username>"},
             {"exit", "Exits YunOS"},
             {"clear", "Clears the Console"},
-            {"echo", "Prints arguments to the Console"},
-            {"sha", "Prints SHA256 of arguments"},
-            {"mkdir", "Creates a directory"},
-            {"rmdir", "Removes a directory"},
-            {"cd", "Changes the current directory"},
+            {"echo", "Prints arguments to the Console%echo <text> / echo $<key>"},
+            {"sha", "Prints SHA256 of arguments%sha <text> <key>"},
+            {"mkdir", "Creates a directory%mkdir <directory>"},
+            {"rmdir", "Removes a directory%rmdir <directory>"},
+            {"cd", "Changes the current directory%cd <directory>"},
             {"ls", "Lists the contents of the current directory"},
-            {"rm", "Removes a file"},
-            {"touch", "Creates a file"},
-            {"cat", "Displays the contents of a file"},
-            {"store", "Stores data in cache"},
-            {"read", "Reads data from cache"},
-            {"write", "Writes text to a file"},
-            {"append", "Appends text to a file"},
-            {"edit", "Edits a file using nano"},
-            {"cp", "Copies a file"},
-            {"mv", "Moves a file"},
-            {"rename", "Renames a file"},
+            {"rm", "Removes a file%rm <file>"},
+            {"touch", "Creates a file%touch <file>"},
+            {"cat", "Displays the contents of a file%cat <file>"},
+            {"store", "Stores data in cache%store <key> <data>"},
+            {"read", "Reads data from cache%read <key>"},
+            {"write", "Writes text to a file%write <file> <text>"},
+            {"append", "Appends text to a file%append <file> <text>"},
+            {"edit", "Edits a file using nano%edit <file>"},
+            {"cp", "Copies a file%cp <file> <destination>"},
+            {"mv", "Moves a file%mv <file> <destination>"},
+            {"rename", "Renames a file%rename <file> <name>"},
             {"pwd", "Displays the current directory"},
             {"date", "Displays the current date and time"},
-            {"run", "runs a .yun applet"},
-            {"python", "runs a python3 script"},
-            {"node", "runs a nodejs script"},
+            {"run", "runs a .yun applet%run <file>"},
+            {"python", "runs a python3 script%python <file>"},
+            {"node", "runs a nodejs script%node <file>"},
         };
 
         public static void Main(string[] args)
@@ -70,10 +70,17 @@ namespace YunOS
             checkifSetup();
         }
 
-        static void throwError(string cmd = "An unexpected error occurred.")
+        static void throwSuccess(string message = "Action successful.")
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"\nSUCCESS: {message}");
+            Console.ResetColor();
+        }
+
+        static void throwError(string message = "An unexpected error occurred.")
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"\nError: {cmd}\n");
+            Console.WriteLine($"\nERROR: {message}\n");
             Console.ResetColor();
 
         }
@@ -124,12 +131,11 @@ namespace YunOS
             Console.WriteLine();
             string _password = passwordBuilder.ToString();
 
-            if (File.Exists($"C:\\yunos\\{_username}.yuser"))
+            if (userExists(_username))
             {
                 string[] lines = File.ReadAllLines($"C:\\yunos\\{_username}.yuser");
                 if (lines[0] == ShaEncrypt(_password).ToLower())
                 {
-                    // CLEAR THE PASSWORD VARIABLE! DUMB DUMB
                     _password = null;
                     Console.WriteLine("Login successful!");
                     Console.WriteLine();
@@ -139,14 +145,12 @@ namespace YunOS
                 else
                 {
                     throwError("Incorrect username or password.");
-                    Console.WriteLine();
                     login();
                 }
             }
             else
             {
-                throwError("Incorrect username or password.");
-                Console.WriteLine();
+                throwError("This User does not exist.");
                 login();
             }
             Console.Clear();
@@ -209,19 +213,14 @@ namespace YunOS
                     }
                 }
                 Console.WriteLine();
-                // Yuck.
-                //Thread.Sleep(350);
-                File.Create($"{syspath}root.yuser").Close();
-                File.WriteAllText($"{syspath}root.yuser", ShaEncrypt(passwordBuilder.ToString()).ToLower());
-                Directory.CreateDirectory($"{syspath}root");
-                Directory.CreateDirectory($"{syspath}root\\home");
+                createUser("root", ShaEncrypt(passwordBuilder.ToString()).ToLower());
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("\nFirst-Time Setup successful.\nYou may now login.\nIt is recommended to create another User, however, this is not necessary.\nFor a list of commands, type 'help', for instructions on how to use a command type 'man <command>'.\n");
                 Console.ResetColor();
             }
             else
             {
-                if(!File.Exists($"{syspath}\\root.yuser"))
+                if(!userExists("root"))
                 {
                     if(prompt("WARNING: The Root user is missing. Would you like to Create it?", ConsoleColor.Yellow))
                     {
@@ -248,8 +247,7 @@ namespace YunOS
                             }
                         }
                         Console.WriteLine();
-                        File.Create($"{syspath}\\root.yuser").Close();
-                        File.WriteAllText($"{syspath}\\root.yuser", ShaEncrypt(passwordBuilder.ToString()));
+                        createUser("root", ShaEncrypt(passwordBuilder.ToString()).ToLower());
                     }
                 }
             }
@@ -285,6 +283,17 @@ namespace YunOS
         {
             string[] args = input.Split(' ');
 
+            if(!commands.ContainsKey(args[0]))
+        	{
+                if (File.Exists(args[0]))
+                {
+                    var proc = Process.Start($"{Directory.GetCurrentDirectory() + "\\" + args[0]}");
+                    proc.WaitForExit();
+                }
+                else
+                    throwError($"{args[0]} is not a recognized command - see 'help'.");
+            }
+
             switch (args[0])
             {
                 case "help":
@@ -292,7 +301,11 @@ namespace YunOS
                     Console.WriteLine();
 
                     foreach(var pair in commands)
-                        Console.WriteLine($"\t{pair.Key} - {pair.Value}");
+                    {
+                        string desc = pair.Value;
+                        desc = (desc.Contains("%") ? desc.Split("%")[0] : desc);
+                        Console.WriteLine($"\t{pair.Key} - {desc}");
+                    }
 
                     Console.WriteLine("\t\r\n--- YunScript Specific Commands---\r\n");
                     Console.WriteLine("\tmath - performs simple mathematical equasions");
@@ -306,118 +319,25 @@ namespace YunOS
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.WriteLine();
 
+                        if(commands.ContainsKey(args[1]))
+                        {
+                            string description = commands[args[1]];
+                            string usage = null;
+                            if (description.Contains("%"))
+                            {
+                                usage = description.Split("%")[1];
+                                description = description.Split("%")[0];
+                            }
+
+                            Console.WriteLine($"{args[1]} - {description}");
+                            if(usage != null) Console.WriteLine($"Usage: {usage}");
+                            Console.WriteLine();
+                            Console.ResetColor();
+                            break;
+                        }
+
                         switch (args[1])
                         {
-                            case "help":
-                                Console.WriteLine("help - Displays this message");
-                                break;
-                            case "man":
-                                Console.WriteLine("man - Displays the manual for a command");
-                                Console.WriteLine("Usage: man <command>");
-                                break;
-                            case "newuser":
-                                Console.WriteLine("newuser - Creates a new userfile");
-                                Console.WriteLine("Usage: newuser <username> <password>");
-                                break;
-                            case "remuser":
-                                Console.WriteLine("remuser - Deletes a userfile and the respective home directory");
-                                Console.WriteLine("Usage: remuser <username>");
-                                break;
-                            case "edit":
-                                Console.WriteLine("edit - Edit a file using nano");
-                                Console.WriteLine("Usage: edit <file>");
-                                break;
-                            case "exit":
-                                Console.WriteLine("exit - Exits YunOS");
-                                break;
-                            case "clear":
-                                Console.WriteLine("clear - Clears the console");
-                                break;
-                            case "echo":
-                                Console.WriteLine("echo - Echoes text");
-                                Console.WriteLine("Usage: echo <text> / echo $<key>");
-                                break;
-                            case "sha":
-                                Console.WriteLine("sha - Encrypts text with SHA256, and stores it in cache");
-                                Console.WriteLine("Usage: sha <text> <key>");
-                                break;
-                            case "mkdir":
-                                Console.WriteLine("mkdir - Creates a directory");
-                                Console.WriteLine("Usage: mkdir <directory name>");
-                                break;
-                            case "rmdir":
-                                Console.WriteLine("rmdir - Removes a directory");
-                                Console.WriteLine("Usage: rmdir <directory name>");
-                                break;
-                            case "cd":
-                                Console.WriteLine("cd - Changes the current directory");
-                                Console.WriteLine("Usage: cd <directory name>");
-                                break;
-                            case "ls":
-                                Console.WriteLine("ls - Lists the contents of the current directory");
-                                break;
-                            case "rm":
-                                Console.WriteLine("rm - Removes a file");
-                                Console.WriteLine("Usage: rm <file name>");
-                                break;
-                            case "touch":
-                                Console.WriteLine("touch - Creates a file");
-                                Console.WriteLine("Usage: touch <file name>");
-                                break;
-                            case "cat":
-                                Console.WriteLine("cat - Displays the contents of a file");
-                                Console.WriteLine("Usage: cat <file name>");
-                                break;
-                            case "store":
-                                Console.WriteLine("store - Stores data in cache");
-                                Console.WriteLine("Usage: store <key> <data>");
-                                break;
-                            case "read":
-                                Console.WriteLine("read - Reads data from cache");
-                                Console.WriteLine("Usage: read <key>");
-                                break;
-                            case "write":
-                                Console.WriteLine("write - Writes text to a file");
-                                Console.WriteLine("Usage: write <file name> <text>");
-                                break;
-                            case "append":
-                                Console.WriteLine("append - Appends text to a file");
-                                Console.WriteLine("Usage: append <file name> <text>");
-                                break;
-                            case "cp":
-                                Console.WriteLine("cp - Copies a file");
-                                Console.WriteLine("Usage: cp <file name> <destination>");
-                                break;
-                            case "mv":
-                                Console.WriteLine("mv - Moves a file");
-                                Console.WriteLine("Usage: mv <file name> <destination>");
-                                break;
-                            case "rename":
-                                Console.WriteLine("rename - Renames a file");
-                                Console.WriteLine("Usage: rename <file name> <new name>");
-                                break;
-                            case "pwd":
-                                Console.WriteLine("pwd - Displays the current directory");
-                                break;
-                            case "date":
-                                Console.WriteLine("date - Displays the current date and time");
-                                break;
-                            case "run":
-                                Console.WriteLine("run - Runs a .yun applet");
-                                Console.WriteLine("Usage: run <file name>");
-                                break;
-                            case "python":
-                                Console.WriteLine("python - Runs a python3 script");
-                                Console.WriteLine("Usage: python <file name>");
-                                break;
-                            case "node":
-                                Console.WriteLine("node - Runs a nodejs script");
-                                Console.WriteLine("Usage: node <file name>");
-                                break;
-                            case "reset":
-                                Console.WriteLine("reset - Deletes the C:\\yunos Directory.");
-                                Console.WriteLine("Usage: reset (confirm)");
-                                break;
                             case "math":
                                 Console.WriteLine("math - Performs a math operation");
                                 Console.WriteLine("Usage: math <operation> <number_1> <number_2> <key>");
@@ -434,26 +354,44 @@ namespace YunOS
                                 Console.WriteLine("if - check if two values are the same, skips the following line of code if they are not.");
                                 Console.WriteLine("Usage: if <value 1> <value 2>");
                                 break;
+                            default:
+                                throwError("This Command is Unknown.");
+                                break;
                         }
-                        Console.WriteLine();
                         Console.ResetColor();
                     }
                     break;
                 case "newuser":
                     if(args.Length > 2)
                     {
-                        if (!File.Exists($"C:\\yunos\\{args[1]}.yuser"))
-                        {
-                            File.Create($"C:\\yunos\\{args[1]}.yuser").Close();
-                            File.WriteAllText($"C:\\yunos\\{args[1]}.yuser", ShaEncrypt(args[2]).ToLower());
-
-                            Directory.CreateDirectory($"C:\\yunos\\{args[1]}");
-                            Directory.CreateDirectory($"C:\\yunos\\{args[1]}\\home");
-
-                            Console.WriteLine("User created successfully!");
+                        if (!userExists(args[1])) {
+                            Console.WriteLine("Please enter a Password for your new User: ");
+                            StringBuilder passwordBuilder = new StringBuilder();
+                            bool reading = true;
+                            while(reading) {
+                                ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+                                char entered = keyInfo.KeyChar;
+                                switch (entered)
+                                {
+                                    case '\b':
+                                        if (passwordBuilder.Length == 0) break;
+                                        Console.Write(entered + " " + entered);
+                                        passwordBuilder.Length--;
+                                        break;
+                                    case '\r':
+                                        reading = false;
+                                        break;
+                                    default:
+                                        Console.Write('*');
+                                        passwordBuilder.Append(entered.ToString());
+                                        break;
+                                }
+                            }
+                            createUser(args[1], ShaEncrypt(passwordBuilder.ToString()).ToString());
+                            throwSuccess("User has been created.");
                         }
                         else
-                            Console.WriteLine("User already exists!");
+                            throwError("User already exists.");
                     }
                     else
                         throwError("newuser requires two arguments - see 'man newuser'");
@@ -462,21 +400,22 @@ namespace YunOS
                 case "remuser":
                     if(args.Length > 1)
                     {
-                        if (File.Exists($"C:\\yunos\\{args[1]}.yuser"))
+                        // Prevent Self-Deletion
+                        if (userExists(args[1]) && _username != args[1])
                         {
-                            File.Delete($"C:\\yunos\\{args[1]}.yuser");
-
-                            Directory.Delete($"C:\\yunos\\{args[1]}", true);
-
-                            Console.WriteLine("User deleted successfully!");
+                            if(!deleteUser(args[1]))
+                            {
+                                throwError("User partially deleted. Some files may be in use.");
+                                break;
+                            }
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            throwSuccess("Successfully deleted User.");
                         }
                         else
-                        {
-                            Console.WriteLine("User doesn't exist!");
-                        }
-                    } else {
+                            throwError("User doesn't exist.");
+                    } 
+                    else
                         throwError("remuser requires one argument - see 'man remuser'");
-                    }
                     break;
 
                 case "exit":
@@ -810,17 +749,6 @@ namespace YunOS
                     }
                     else Console.WriteLine("WARNING! This command will erase the C:\\yunos\\ Directory! To confirm this, please run \"reset confirm\"!");
                     break;
-                default:
-                    if (File.Exists(args[0]))
-                    {
-                        var proc = Process.Start($"{Directory.GetCurrentDirectory() + "\\" + args[0]}");
-                        proc.WaitForExit();
-                        var exitCode = proc.ExitCode;
-                    }
-                    else
-                        throwError($"{args[0]} is not a recognized command - see 'help'.");
-                    break;
-
             }
 
             shellLoop();
@@ -1399,6 +1327,29 @@ namespace YunOS
                     break;
 
             }
+        }
+
+        static bool deleteUser(string username)
+        {
+            try
+            {
+                File.Delete($"{syspath + username}.yuser");
+                Directory.Delete($"{syspath + username}", true);
+                return true;
+            } 
+            catch(IOException) { return false; }
+        }
+
+        static void createUser(string username, string hashedPassword)
+        {
+            File.Create($"{syspath + username}.yuser").Close();
+            File.WriteAllText($"{syspath + username}.yuser", hashedPassword);
+            Directory.CreateDirectory(syspath + username);
+            Directory.CreateDirectory($"{syspath + username}\\home");
+        }
+
+        static bool userExists(string username) {
+            return File.Exists($"{syspath}{username}.yuser");
         }
 
         static void installProgram(string url, string path, string name, bool zip)
