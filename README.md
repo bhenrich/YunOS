@@ -1,5 +1,5 @@
 <img src="https://github.com/bhenrich/YunOS/blob/main/MEDIA/yunos%20logo%20png.png" alt="YunOS Logo" width="200">
-An emulated Linux-Style Subsystem for Windows.
+A simulated Linux-Style Subsystem for Windows.
 
 ---
 ## Table of Contents
@@ -14,7 +14,7 @@ An emulated Linux-Style Subsystem for Windows.
   * [03/23/2023 - v0.1](#03232023---v01)
 ---
 Heads up. This project is made for me to learn more about C#. It's not meant for actual, practical use. See it as some sort of toy.
-This project has been made by Benjamin "YuNii" Henrich, with numerous contributions from [GeoBaer24](https://github.com/geobaer24)
+This project has been made by Benjamin "YuNii" Henrich, with numerous contributions from [GeoBaer24](https://github.com/geobaer24).
 
 ## Features
 - Full Linux-Style Commandline
@@ -39,15 +39,15 @@ This project has been made by Benjamin "YuNii" Henrich, with numerous contributi
 - YunOS comes with optional support for Python, NodeJS and the CLI-Based Text Editor Nano. YunOS will ask you if you want to install those during the first time setup. I recommend installing them, since it doesn't take long, doesn't take up a lot of space and for now you cannot install them later without first re-installing YunOS.
 - YunOS will create it's enviroment in the "C:\" root of your Windows OS Drive.
 
-### Should you run into any problems during the install process, or while using YunOS, write an [E-Mail to our support.](mailto://support@yuniiworks.de)
+### Should you run into any problems during the install process, or while using YunOS, write an [E-Mail to our support](mailto://support@yuniiworks.de).
 
 ---
 ## Changelog & Roadmap
 
-*NOTICE: YunOS is a hobby project and will not receive a steady flow of updates. Updates to YunOS's development can be found on my [Twitter Page.](https://twitter.com/yuniiworks)*
+*NOTICE: YunOS is a hobby project and will not receive a steady flow of updates. Updates to YunOS's development can be found on my [Twitter Page](https://twitter.com/yuniiworks).*
 
 ### Planned for the next Release
-- Support for Debian-based Linux Distributions as a host system
+- ~~Support for Debian-based Linux Distributions as a host system~~
 - Support for the winget/apt package manager to install any cli-software to YunOS
 
 ### 03/28/2023 - v0.1.1

@@ -1,18 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
+﻿using System.Text;
 using System.Diagnostics;
-using System.Reflection;
 using System.Net;
 using System.IO.Compression;
-
-#pragma warning disable CS8600
-#pragma warning disable SYSLIB0021
-#pragma warning disable IL3000
-#pragma warning disable SYSLIB0014
 
 namespace YunOS
 {
@@ -27,11 +16,7 @@ namespace YunOS
         static string[] cache = new String[99];
         static int yunScriptLineNum = 0;
         static string _username;
-        static string syspath = "C:\\yunos\\";
-        static string nanopath = syspath + "exe\\nano.exe";
-        static string pypath = syspath + "exe\\python\\python.exe";
-        static string nodepath = syspath + "exe\\node\\node-v18.15.0-win-x64\\node.exe";
-        static string temppath = syspath + "temp";
+        
         static Dictionary<string, string> commands = new Dictionary<string, string>(){
             {"help", "Displays a list of Commands"},
             {"man", "Displays the manual for a command%man <command>"},
@@ -67,43 +52,12 @@ namespace YunOS
         public static void Main(string[] args)
         {
             Console.Clear();
-            //checkIfAdmin();
-            checkifSetup();
+            if(!Setup.IsSetup) Setup.StartSetup();
+            Console.WriteLine("Welcome to YunOS! Please Log in.\n");
+            Login();
         }
 
-        static void throwSuccess(string message = "Action successful.")
-        {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"\nSUCCESS: {message}");
-            Console.ResetColor();
-        }
-
-        static void throwError(string message = "An unexpected error occurred.")
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"\nERROR: {message}\n");
-            Console.ResetColor();
-
-        }
-
-        static void resetConsole()
-        {
-            // set the directory to C:\\yunos\\root
-            checkifSetup();
-            Directory.SetCurrentDirectory("C:\\yunos\\root\\home");
-            Console.Clear();
-            Console.WriteLine("Welcome to YunOS!");
-            shellLoop();
-        }
-
-        static void resetConsoleFirst()
-        {
-            Directory.SetCurrentDirectory("C:\\yunos");
-            Console.WriteLine("Welcome to YunOS!");
-            login();
-        }
-
-        static void login()
+        static void Login()
         {
             Console.Write("Username: ");
             _username = Console.ReadLine();
@@ -132,146 +86,28 @@ namespace YunOS
             Console.WriteLine();
             string _password = passwordBuilder.ToString();
 
-            if (userExists(_username))
+            if (Users.UserExists(_username))
             {
-                string[] lines = File.ReadAllLines($"C:\\yunos\\{_username}.yuser");
-                if (lines[0] == ShaEncrypt(_password).ToLower())
+                string password = Users.GetHash(_username);
+                if (password == Data.ShaEncrypt(_password).ToLower())
                 {
                     _password = null;
-                    Console.WriteLine("Login successful!");
-                    Console.WriteLine();
-                    Directory.SetCurrentDirectory($"C:\\yunos\\{_username}\\home");
+                    Console.WriteLine($"Successfully Logged in as {_username}!\n");
+                    Directory.SetCurrentDirectory($"{FileSystem.SystemPath}{_username}\\home");
                     shellLoop();
                 }
                 else
                 {
-                    throwError("Incorrect username or password.");
-                    login();
+                    Data.ThrowError("Incorrect username or password.");
+                    Login();
                 }
             }
             else
             {
-                throwError("This User does not exist.");
-                login();
+                Data.ThrowError("This User does not exist.");
+                Login();
             }
             Console.Clear();
-        }
-
-        static void checkifSetup()
-        {
-            if (!Directory.Exists(syspath))
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-
-
-                Console.WriteLine("Performing First-Time Setup...");
-                Console.WriteLine("Creating System Directories...");
-
-                Directory.CreateDirectory(syspath);
-
-                Directory.CreateDirectory($"{syspath}exe");
-
-                Directory.CreateDirectory(temppath);
-
-                Console.WriteLine();
-
-                if (prompt("Would you like to install nano?", ConsoleColor.Yellow))
-                    installProgram("https://www.nano-editor.org/dist/win32-support/nano-git-0d9a7347243.exe", nanopath.Substring(0, nanopath.Length-8), "nano", false);
-                else
-                    Console.WriteLine("Skipping nano Installation...");
-
-                if (prompt("Would you like to install Python (3.10)?", ConsoleColor.Yellow))
-                {
-                    string pyfolder = pypath.Substring(0, pypath.Length-10);
-                    installProgram("https://www.python.org/ftp/python/3.10.10/python-3.10.10-embed-amd64.zip", pyfolder, "Python", true);
-                    installProgram("https://bootstrap.pypa.io/get-pip.py", pyfolder, "Pip", false);
-                    File.Move($"{pyfolder}Pip.exe", $"{pyfolder}get-pip.py");
-                    File.AppendAllText($"{pyfolder}python310._pth", "import site\r\n");
-                    runProcess($"{pypath}", $"{pyfolder}get-pip.py", false);
-                    File.Delete($"{pyfolder}get-pip.py");
-                }
-                else
-                    Console.WriteLine("Skipping Python Installation...");
-
-                if (prompt("Would you like to install NodeJS 18.15.0?", ConsoleColor.Yellow))
-                    installProgram("https://nodejs.org/dist/v18.15.0/node-v18.15.0-win-x64.zip", nodepath.Substring(0, nodepath.Length-30), "NodeJS", true);
-                else
-                    Console.WriteLine("Skipping NodeJS Installation...");
-                Console.WriteLine();
-
-                Console.Write("Please enter a Password for the Root User: ");
-                StringBuilder passwordBuilder = new StringBuilder();
-                bool reading = true;
-                while(reading) {
-                    ConsoleKeyInfo keyInfo = Console.ReadKey(true);
-                    char entered = keyInfo.KeyChar;
-                    switch (entered)
-                    {
-                        case '\b':
-                            if (passwordBuilder.Length == 0) break;
-                            Console.Write(entered + " " + entered);
-                            passwordBuilder.Length--;
-                            break;
-                        case '\r':
-                            reading = false;
-                            break;
-                        default:
-                            Console.Write('*');
-                            passwordBuilder.Append(entered.ToString());
-                            break;
-                    }
-                }
-                Console.WriteLine();
-                createUser("root", ShaEncrypt(passwordBuilder.ToString()).ToLower());
-                throwSuccess("\nFirst-Time Setup successful.\nYou may now login.\nIt is recommended to create another User, however, this is not necessary.\nFor a list of commands, type 'help', for instructions on how to use a command type 'man <command>'.\n");
-            }
-            else
-            {
-                if(!userExists("root"))
-                {
-                    if(prompt("WARNING: The Root user is missing. Would you like to Create it?", ConsoleColor.Yellow))
-                    {
-                        Console.Write("Please enter a Password: ");
-                        StringBuilder passwordBuilder = new StringBuilder();
-                        bool reading = true;
-                        while(reading) {
-                            ConsoleKeyInfo keyInfo = Console.ReadKey(true);
-                            char entered = keyInfo.KeyChar;
-                            switch (entered)
-                            {
-                                case '\b':
-                                    if (passwordBuilder.Length == 0) break;
-                                    Console.Write(entered + " " + entered);
-                                    passwordBuilder.Length--;
-                                    break;
-                                case '\r':
-                                    reading = false;
-                                    break;
-                                default:
-                                    Console.Write('*');
-                                    passwordBuilder.Append(entered.ToString());
-                                    break;
-                            }
-                        }
-                        Console.WriteLine();
-                        createUser("root", ShaEncrypt(passwordBuilder.ToString()).ToLower());
-                    }
-                }
-            }
-            resetConsoleFirst();
-        }
-
-        static string ShaEncrypt(string text)
-        {
-            if (String.IsNullOrEmpty(text))
-                return String.Empty;
-
-            using (var sha = new System.Security.Cryptography.SHA256Managed())
-            {
-                byte[] textData = System.Text.Encoding.UTF8.GetBytes(text);
-                byte[] hash = sha.ComputeHash(textData);
-                return BitConverter.ToString(hash).Replace("-", String.Empty);
-            }
         }
 
         static void shellLoop()
@@ -300,7 +136,7 @@ namespace YunOS
                     proc.WaitForExit();
                 }
                 else
-                    throwError($"{cmd} is not a recognized command - see 'help'.");
+                    Data.ThrowError($"{cmd} is not a recognized command - see 'help'.");
             }
 
             switch (cmd)
@@ -364,66 +200,44 @@ namespace YunOS
                                 Console.WriteLine("Usage: if <value 1> <value 2>");
                                 break;
                             default:
-                                throwError("This Command is Unknown.");
+                                Data.ThrowError("This Command is Unknown.");
                                 break;
                         }
                         Console.ResetColor();
                     }
                     break;
                 case "newuser":
-                    if(args.Length == 2)
+                    if(args.Length == 1)
                     {
-                        if (!userExists(args[0])) {
-                            Console.WriteLine("Please enter a Password for your new User: ");
-                            StringBuilder passwordBuilder = new StringBuilder();
-                            bool reading = true;
-                            while(reading) {
-                                ConsoleKeyInfo keyInfo = Console.ReadKey(true);
-                                char entered = keyInfo.KeyChar;
-                                switch (entered)
-                                {
-                                    case '\b':
-                                        if (passwordBuilder.Length == 0) break;
-                                        Console.Write(entered + " " + entered);
-                                        passwordBuilder.Length--;
-                                        break;
-                                    case '\r':
-                                        reading = false;
-                                        break;
-                                    default:
-                                        Console.Write('*');
-                                        passwordBuilder.Append(entered.ToString());
-                                        break;
-                                }
-                            }
-                            createUser(args[0], ShaEncrypt(passwordBuilder.ToString()).ToString());
-                            throwSuccess("User has been created.");
+                        if (!Users.UserExists(args[0])) {
+                            Users.CreateUser(args[0]);
+                            Data.ThrowSuccess("User has been created.");
                         }
                         else
-                            throwError("User already exists.");
+                            Data.ThrowError("User already exists.");
                     }
                     else
-                        throwError("newuser requires two arguments - see 'man newuser'");
+                        Data.ThrowError("newuser requires one argument - see 'man newuser'");
                     break;
 
                 case "remuser":
                     if(args.Length == 1)
                     {
                         // Prevent Self-Deletion
-                        if (userExists(args[0]) && _username != args[0])
+                        if (Users.UserExists(args[0]) && _username != args[0])
                         {
-                            if(!deleteUser(args[0]))
+                            if(!Users.DeleteUser(args[0]))
                             {
-                                throwError("User partially deleted. Some files may be in use.");
+                                Data.ThrowError("User partially deleted. Some files may be in use.");
                                 break;
                             }
-                            throwSuccess("Successfully deleted User.");
+                            Data.ThrowSuccess("Successfully deleted User.");
                         }
                         else
-                            throwError("User doesn't exist.");
+                            Data.ThrowError("User doesn't exist.");
                     } 
                     else
-                        throwError("remuser requires one argument - see 'man remuser'");
+                        Data.ThrowError("remuser requires one argument - see 'man remuser'");
                     break;
 
                 case "exit":
@@ -450,7 +264,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("echo requires at least one argument - see 'man echo'");
+                        Data.ThrowError("echo requires at least one argument - see 'man echo'");
                     }
                     break;
                 case "sha":
@@ -458,12 +272,12 @@ namespace YunOS
                     {
                         for (int i = 0; i < args.Length; i++)
                         {
-                            cache[Int16.Parse(args[0])] += ShaEncrypt(args[i]).ToLower() + " ";
+                            cache[Int16.Parse(args[0])] += Data.ShaEncrypt(args[i]).ToLower() + " ";
                         }
                     }
                     else
                     {
-                        throwError("sha requires at least one argument - see 'man sha'");
+                        Data.ThrowError("sha requires at least one argument - see 'man sha'");
                     }
                     break;
                 case "mkdir":
@@ -476,7 +290,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("No directory name given - see 'man mkdir'");
+                        Data.ThrowError("No directory name given - see 'man mkdir'");
                     }
                     break;
                 case "rmdir":
@@ -489,7 +303,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("No directory name given - see 'man rmdir'");
+                        Data.ThrowError("No directory name given - see 'man rmdir'");
                     }
                     break;
                 case "cd":
@@ -526,7 +340,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("No directory name given - see 'man cd'");
+                        Data.ThrowError("No directory name given - see 'man cd'");
                     }
                     break;
                 case "ls":
@@ -555,7 +369,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("No file name given - see 'man rm'");
+                        Data.ThrowError("No file name given - see 'man rm'");
                     }
                     break;
                 case "touch":
@@ -568,7 +382,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("No file name given - see 'man touch'");
+                        Data.ThrowError("No file name given - see 'man touch'");
                     }
                     break;
                 case "cat":
@@ -580,12 +394,12 @@ namespace YunOS
                         }
                         else
                         {
-                            throwError("File not found.");
+                            Data.ThrowError("File not found.");
                         }
                     }
                     else
                     {
-                        throwError("No file name given - see 'man cat'");
+                        Data.ThrowError("No file name given - see 'man cat'");
                     }
                     break;
                 case "store":
@@ -597,7 +411,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("Not enough arguments - see 'man store'");
+                        Data.ThrowError("Not enough arguments - see 'man store'");
                     }
                     break;
                 case "read":
@@ -608,7 +422,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("No cache key given - see 'man read'");
+                        Data.ThrowError("No cache key given - see 'man read'");
                     }
                     break;
                 case "write":
@@ -628,11 +442,11 @@ namespace YunOS
                             }
                         }
                         if (File.Exists(file)) File.WriteAllText(file, text);
-                        else throwError("File not found!");
+                        else Data.ThrowError("File not found!");
                     }
                     else
                     {
-                        throwError("Not enough arguments - see 'man write'");
+                        Data.ThrowError("Not enough arguments - see 'man write'");
                     }
                     break;
                 case "append":
@@ -652,11 +466,11 @@ namespace YunOS
                             }
                         }
                         if (File.Exists(file)) File.AppendAllText(file, text + "\r\n");
-                        else throwError("File not found!");
+                        else Data.ThrowError("File not found!");
                     }
                     else
                     {
-                        throwError("Not enough arguments given - see 'man append'");
+                        Data.ThrowError("Not enough arguments given - see 'man append'");
                     }
                     break;
                 case "cp":
@@ -668,25 +482,25 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("Not enough arguments - see 'man cp'");
+                        Data.ThrowError("Not enough arguments - see 'man cp'");
                     }
                     break;
                 case "edit":
                     if (args.Length == 1)
-                        runProcess(nanopath, args[0], false);
+                        Data.RunProcess(FileSystem.NanoPath, args[0], false);
                     else
-                        throwError("No filename given - see 'man edit'");
+                        Data.ThrowError("No filename given - see 'man edit'");
                     break;
                 case "node":
                 case "python":
-                    string epath = (cmd == "node" ? nodepath : pypath);
+                    string epath = (cmd == "node" ? FileSystem.NodePath : FileSystem.PythonPath);
                     if(!File.Exists(epath))
                     {
-                        throwError($"{cmd} is not Installed.");
+                        Data.ThrowError($"{cmd} is not Installed.");
                         break;
                     }
                     
-                    runProcess(epath, (args.Length == 0 ? "" : " " + String.Join(" " , args)), true, false);
+                    Data.RunProcess(epath, (args.Length == 0 ? "" : " " + String.Join(" " , args)), true, false);
                     break;
                 case "rename":
                 case "mv":
@@ -698,7 +512,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError($"Not enough arguments given - see 'man {cmd}'");
+                        Data.ThrowError($"Not enough arguments given - see 'man {cmd}'");
                     }
                     break;
                 case "pwd":
@@ -715,12 +529,12 @@ namespace YunOS
                     if (args.Length == 1 && args[0].EndsWith(".yun"))
                         runApplet(args[0]);
                     else
-                        throwError("No file specified or File is not a .yun File.");
+                        Data.ThrowError("No file specified or File is not a .yun File.");
                     break;
                 case "reset":
                     if (args.Length == 1 && args[0].ToLower().Equals("confirm")) {
                         Directory.SetCurrentDirectory("C:\\");
-                        Directory.Delete(syspath, true);
+                        Directory.Delete(FileSystem.SystemPath, true);
                         Console.WriteLine("Deleting C:\\yunos\\... See you next time!");
                         Environment.Exit(0);
                     }
@@ -770,7 +584,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("echo requires at least one argument - see 'man echo'");
+                        Data.ThrowError("echo requires at least one argument - see 'man echo'");
                     }
                     break;
                 case "sha":
@@ -778,12 +592,12 @@ namespace YunOS
                     {
                         for (int i = 1; i < line.Length; i++)
                         {
-                            cache[Int16.Parse(line[1])] += ShaEncrypt(line[i]).ToLower() + " ";
+                            cache[Int16.Parse(line[1])] += Data.ShaEncrypt(line[i]).ToLower() + " ";
                         }
                     }
                     else
                     {
-                        throwError("sha requires at least one argument - see 'man sha'");
+                        Data.ThrowError("sha requires at least one argument - see 'man sha'");
                     }
                     break;
                 case "mkdir":
@@ -796,7 +610,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("No directory name given - see 'man mkdir'");
+                        Data.ThrowError("No directory name given - see 'man mkdir'");
                     }
                     break;
                 case "rmdir":
@@ -809,7 +623,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("No directory name given - see 'man rmdir'");
+                        Data.ThrowError("No directory name given - see 'man rmdir'");
                     }
                     break;
                 case "cd":
@@ -846,7 +660,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("No directory name given - see 'man cd'");
+                        Data.ThrowError("No directory name given - see 'man cd'");
                     }
                     break;
                 case "ls":
@@ -875,7 +689,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("No file name given - see 'man rm'");
+                        Data.ThrowError("No file name given - see 'man rm'");
                     }
                     break;
                 case "touch":
@@ -888,7 +702,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("No file name given - see 'man touch'");
+                        Data.ThrowError("No file name given - see 'man touch'");
                     }
                     break;
                 case "cat":
@@ -900,12 +714,12 @@ namespace YunOS
                         }
                         else
                         {
-                            throwError("File not found!");
+                            Data.ThrowError("File not found!");
                         }
                     }
                     else
                     {
-                        throwError("No file name given - see 'man cat'");
+                        Data.ThrowError("No file name given - see 'man cat'");
                     }
                     break;
                 case "store":
@@ -917,7 +731,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("Not enough arguments - see 'man store'");
+                        Data.ThrowError("Not enough arguments - see 'man store'");
                     }
                     break;
                 case "read":
@@ -928,7 +742,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("No cache key given - see 'man read'");
+                        Data.ThrowError("No cache key given - see 'man read'");
                     }
                     break;
                 case "write":
@@ -948,11 +762,11 @@ namespace YunOS
                             }
                         }
                         if (File.Exists(file)) File.WriteAllText(file, text);
-                        else throwError("File not found!");
+                        else Data.ThrowError("File not found!");
                     }
                     else
                     {
-                        throwError("Not enough arguments - see 'man write'");
+                        Data.ThrowError("Not enough arguments - see 'man write'");
                     }
                     break;
                 case "append":
@@ -972,11 +786,11 @@ namespace YunOS
                             }
                         }
                         if (File.Exists(file)) File.AppendAllText(file, text + "\r\n");
-                        else throwError("File not found!");
+                        else Data.ThrowError("File not found!");
                     }
                     else
                     {
-                        throwError("Not enough arguments given - see 'man append'");
+                        Data.ThrowError("Not enough arguments given - see 'man append'");
                     }
                     break;
                 case "cp":
@@ -988,27 +802,27 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("Not enough arguments - see 'man cp'");
+                        Data.ThrowError("Not enough arguments - see 'man cp'");
                     }
                     break;
                 case "edit":
                     if (line.Length > 1)
-                        runProcess(nanopath, line[1], false);
+                        Data.RunProcess(FileSystem.NanoPath, line[1], false);
                     else
-                        throwError("No filename given - see 'man edit'");
+                        Data.ThrowError("No filename given - see 'man edit'");
                     break;
                 case "python":
                     if (line.Length > 1)
                     {
                         if (File.Exists(line[1]))
                         {
-                            var proc = Process.Start($"{pypath}", $"\"{Directory.GetCurrentDirectory() + "\\" + line[1]}\"");
+                            var proc = Process.Start($"{FileSystem.PythonPath}", $"\"{Directory.GetCurrentDirectory() + "\\" + line[1]}\"");
                             proc.WaitForExit();
                             var exitCode = proc.ExitCode;
                         }
                         else
                         {
-                            throwError("File not found!");
+                            Data.ThrowError("File not found!");
                         }
                     }
                     break;
@@ -1017,13 +831,13 @@ namespace YunOS
                     {
                         if (File.Exists(line[1]))
                         {
-                            var proc = Process.Start($"{nodepath}", $"\"{Directory.GetCurrentDirectory() + "\\" + line[1]}\"");
+                            var proc = Process.Start($"{FileSystem.NodePath}", $"\"{Directory.GetCurrentDirectory() + "\\" + line[1]}\"");
                             proc.WaitForExit();
                             var exitCode = proc.ExitCode;
                         }
                         else
                         {
-                            throwError("File not found!");
+                            Data.ThrowError("File not found!");
                         }
 
                     }
@@ -1037,7 +851,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("Not enough arguments given - see 'man mv'");
+                        Data.ThrowError("Not enough arguments given - see 'man mv'");
                     }
                     break;
                 case "rename":
@@ -1049,7 +863,7 @@ namespace YunOS
                     }
                     else
                     {
-                        throwError("Not enough arguments given - see 'man rename'");
+                        Data.ThrowError("Not enough arguments given - see 'man rename'");
                     }
                     break;
                 case "pwd":
@@ -1066,7 +880,7 @@ namespace YunOS
                     if (line.Length > 1)
                         runApplet(line[1]);
                     else
-                        throwError("No file specified.");
+                        Data.ThrowError("No file specified.");
                     break;
                 // math functions utiliying cache as variables
                 case "math":
@@ -1093,17 +907,17 @@ namespace YunOS
                                             }
                                             else
                                             {
-                                                throwError("Error in mathematical expression.");
+                                                Data.ThrowError("Error in mathematical expression.");
                                             }
                                         }
                                         else
                                         {
-                                            throwError("Error in mathematical expression.");
+                                            Data.ThrowError("Error in mathematical expression.");
                                         }
                                     }
                                     else
                                     {
-                                        throwError("Error in mathematical expression.");
+                                        Data.ThrowError("Error in mathematical expression.");
                                     }
 
                                     break;
@@ -1122,17 +936,17 @@ namespace YunOS
                                             }
                                             else
                                             {
-                                                throwError("Error in mathematical expression.");
+                                                Data.ThrowError("Error in mathematical expression.");
                                             }
                                         }
                                         else
                                         {
-                                            throwError("Error in mathematical expression.");
+                                            Data.ThrowError("Error in mathematical expression.");
                                         }
                                     }
                                     else
                                     {
-                                        throwError("Error in mathematical expression.");
+                                        Data.ThrowError("Error in mathematical expression.");
                                     }
                                     break;
                                 case "mul":
@@ -1151,17 +965,17 @@ namespace YunOS
                                             }
                                             else
                                             {
-                                                throwError("Error in mathematical expression.");
+                                                Data.ThrowError("Error in mathematical expression.");
                                             }
                                         }
                                         else
                                         {
-                                            throwError("Error in mathematical expression.");
+                                            Data.ThrowError("Error in mathematical expression.");
                                         }
                                     }
                                     else
                                     {
-                                        throwError("Error in mathematical expression.");
+                                        Data.ThrowError("Error in mathematical expression.");
                                     }
                                     break;
                                 case "div":
@@ -1179,17 +993,17 @@ namespace YunOS
                                             }
                                             else
                                             {
-                                                throwError("Error in mathematical expression.");
+                                                Data.ThrowError("Error in mathematical expression.");
                                             }
                                         }
                                         else
                                         {
-                                            throwError("Error in mathematical expression.");
+                                            Data.ThrowError("Error in mathematical expression.");
                                         }
                                     }
                                     else
                                     {
-                                        throwError("Error in mathematical expression.");
+                                        Data.ThrowError("Error in mathematical expression.");
                                     }
                                     break;
                                 case "sqrt":
@@ -1204,12 +1018,12 @@ namespace YunOS
                                         }
                                         else
                                         {
-                                            throwError("Error in mathematical expression.");
+                                            Data.ThrowError("Error in mathematical expression.");
                                         }
                                     }
                                     else
                                     {
-                                        throwError("Error in mathematical expression.");
+                                        Data.ThrowError("Error in mathematical expression.");
                                     }
                                     break;
                                 case "pow":
@@ -1227,17 +1041,17 @@ namespace YunOS
                                             }
                                             else
                                             {
-                                                throwError("Error in mathematical expression.");
+                                                Data.ThrowError("Error in mathematical expression.");
                                             }
                                         }
                                         else
                                         {
-                                            throwError("Error in mathematical expression.");
+                                            Data.ThrowError("Error in mathematical expression.");
                                         }
                                     }
                                     else
                                     {
-                                        throwError("Error in mathematical expression.");
+                                        Data.ThrowError("Error in mathematical expression.");
                                     }
                                     break;
                                 case "mod":
@@ -1255,21 +1069,21 @@ namespace YunOS
                                             }
                                             else
                                             {
-                                                throwError("Error in mathematical expression.");
+                                                Data.ThrowError("Error in mathematical expression.");
                                             }
                                         }
                                         else
                                         {
-                                            throwError("Error in mathematical expression.");
+                                            Data.ThrowError("Error in mathematical expression.");
                                         }
                                     }
                                     else
                                     {
-                                        throwError("Error in mathematical expression.");
+                                        Data.ThrowError("Error in mathematical expression.");
                                     }
                                     break;
                                 default:
-                                    throwError("Error in mathematical expression.");
+                                    Data.ThrowError("Error in mathematical expression.");
                                     break;
                             }
                         }
@@ -1277,7 +1091,7 @@ namespace YunOS
                     catch (Exception e)
                     {
                         string error = e.ToString();
-                        throwError("Error in mathematical expression.");
+                        Data.ThrowError("Error in mathematical expression.");
                     }
 
                     break;
@@ -1300,99 +1114,12 @@ namespace YunOS
                     // do nothing
                     break;
                 default:
-                    throwError($"Unknown function '{line[0]}'.");
+                    Data.ThrowError($"Unknown function '{line[0]}'.");
                     break;
 
             }
         }
 
-        static bool deleteUser(string username)
-        {
-            try
-            {
-                File.Delete($"{syspath + username}.yuser");
-                Directory.Delete($"{syspath + username}", true);
-                return true;
-            } 
-            catch(IOException) { return false; }
-        }
-
-        static void createUser(string username, string hashedPassword)
-        {
-            File.Create($"{syspath + username}.yuser").Close();
-            File.WriteAllText($"{syspath + username}.yuser", hashedPassword);
-            Directory.CreateDirectory(syspath + username);
-            Directory.CreateDirectory($"{syspath + username}\\home");
-        }
-
-        static bool userExists(string username) {
-            return File.Exists($"{syspath}{username}.yuser");
-        }
-
-        static void installProgram(string url, string path, string name, bool zip)
-        {
-            WebClient client = new WebClient();
-            Console.Write($"Downloading {name}...");
-
-            string destination = temppath + "\\temp.zip";
-            if(!zip) destination = $"{path}\\{name}.exe";
-
-            client.DownloadFile(url, destination);
-            while (client.IsBusy)
-            {
-                Console.Write(".");
-                Thread.Sleep(100);
-            }
-
-            client.Dispose();
-
-            if(zip)
-            {
-                Console.Write($"\nExtracting {name}...");
-                ZipFile.ExtractToDirectory(temppath + "\\temp.zip", path);
-                try { File.Delete(temppath + "\\temp.zip"); }
-                catch (Exception e) { throwError(e.Message); }
-            }
-            Console.WriteLine($"\nFinished Installing {name}!");
-        }
-
-        static void runProcess(string program, string path, bool announceExit = true, bool replaceSlashes = true)
-        {
-            if(replaceSlashes && path != null && !(path.Contains("\\") || path.Contains("/")))
-            {
-                path = $"{Directory.GetCurrentDirectory()}\\{path}";
-            }
-            var process = Process.Start(program, path);
-            process.WaitForExit();
-            if(announceExit)
-            {
-                int exitCode = process.ExitCode;
-                if (exitCode == 0)
-                    Console.WriteLine("\nProgram exited with Exit Code 0.\n");
-                else
-                    throwError($"Program exited with Exit Code {exitCode}.");
-
-            }
-        }
-
-        static bool prompt(string message, ConsoleColor col)
-        {
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write($"{message} (Y/n): ");
-            Console.ResetColor();
-
-            // For a T/F Prompt, read a Char instead of a String for faster Setup.
-            char input = Char.ToLower(Console.ReadKey().KeyChar);
-
-            if (input != 'y' && input != 'n')
-            {
-                throwError("Invalid Input. Please try again.");
-                return prompt(message, col);
-            }
-
-            Console.WriteLine();
-            Console.ForegroundColor = col;
-            return input == 'y';
-        }
+        
     }
 }
