@@ -61,6 +61,7 @@ namespace YunOS
             {"run", "runs a .yun applet%run <file>"},
             {"python", "execute a python Command%python <file>"},
             {"node", "execute a node Command%node <file>"},
+            {"reset", "erases the C:\\yunos Directory.%reset (confirm)"}
         };
 
         public static void Main(string[] args)
@@ -180,7 +181,15 @@ namespace YunOS
                     Console.WriteLine("Skipping nano Installation...");
 
                 if (prompt("Would you like to install Python (3.10)?", ConsoleColor.Yellow))
-                    installProgram("https://www.python.org/ftp/python/3.10.10/python-3.10.10-embed-amd64.zip", pypath.Substring(0, pypath.Length-10), "Python", true);
+                {
+                    string pyfolder = pypath.Substring(0, pypath.Length-10);
+                    installProgram("https://www.python.org/ftp/python/3.10.10/python-3.10.10-embed-amd64.zip", pyfolder, "Python", true);
+                    installProgram("https://bootstrap.pypa.io/get-pip.py", pyfolder, "Pip", false);
+                    File.Move($"{pyfolder}Pip.exe", $"{pyfolder}get-pip.py");
+                    File.AppendAllText($"{pyfolder}python310._pth", "import site\r\n");
+                    runProcess($"{pypath}", $"{pyfolder}get-pip.py", false);
+                    File.Delete($"{pyfolder}get-pip.py");
+                }
                 else
                     Console.WriteLine("Skipping Python Installation...");
 
@@ -603,8 +612,7 @@ namespace YunOS
                     }
                     break;
                 case "write":
-                    // YuNii = DUMMY
-                    if (args.Length > 2)
+                    if (args.Length > 1)
                     {
                         string file = args[0];
                         string text = args[1];
@@ -628,8 +636,7 @@ namespace YunOS
                     }
                     break;
                 case "append":
-                    // YuNii = DUMMY
-                    if (args.Length > 2)
+                    if (args.Length > 1)
                     {
                         string file = args[0];
                         string text = args[1];
@@ -678,18 +685,8 @@ namespace YunOS
                         throwError($"{cmd} is not Installed.");
                         break;
                     }
-
-                    if (args.Length == 1 && File.Exists(epath))
-                    {
-                        
-                        if (File.Exists(args[0]))
-                            runProcess(epath, $"\"{Directory.GetCurrentDirectory() + "\\" + args[0]}\"");
-                        else
-                            throwError($"File not found.");
-                    }
-                    else
-                        // Interactive Shell
-                        runProcess(epath,null,true);
+                    
+                    runProcess(epath, (args.Length == 0 ? "" : " " + String.Join(" " , args)), true, false);
                     break;
                 case "rename":
                 case "mv":
@@ -1359,9 +1356,9 @@ namespace YunOS
             Console.WriteLine($"\nFinished Installing {name}!");
         }
 
-        static void runProcess(string program, string path, bool announceExit = true)
+        static void runProcess(string program, string path, bool announceExit = true, bool replaceSlashes = true)
         {
-            if(path != null && !(path.Contains("\\") || path.Contains("/")))
+            if(replaceSlashes && path != null && !(path.Contains("\\") || path.Contains("/")))
             {
                 path = $"{Directory.GetCurrentDirectory()}\\{path}";
             }
