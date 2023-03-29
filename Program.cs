@@ -28,7 +28,7 @@ namespace YunOS
         static int yunScriptLineNum = 0;
         static string _username;
         static string syspath = "C:\\yunos\\";
-        static string nanopath = syspath + "exe\\TEXT.exe";
+        static string nanopath = syspath + "exe\\nano.exe";
         static string pypath = syspath + "exe\\python\\python.exe";
         static string nodepath = syspath + "exe\\node\\node-v18.15.0-win-x64\\node.exe";
         static string temppath = syspath + "temp";
@@ -171,14 +171,9 @@ namespace YunOS
                 Console.WriteLine();
 
                 if (prompt("Would you like to install nano?", ConsoleColor.Yellow))
-                {
-                    WebClient client = new WebClient();
-                    Console.WriteLine("Downloading nano...");
-                    client.DownloadFile("https://www.nano-editor.org/dist/win32-support/nano-git-0d9a7347243.exe", "C:\\yunos\\exe\\TEXT.exe");
-                    Console.WriteLine("Installing nano...");
-                    Console.WriteLine("Sucessfully installed nano!");
-                    client.Dispose();
-                }
+                    installProgram("https://www.nano-editor.org/dist/win32-support/nano-git-0d9a7347243.exe", nanopath.Substring(0, nanopath.Length-8), "nano", false);
+                else
+                    Console.WriteLine("Skipping nano Installation...");
 
                 if (prompt("Would you like to install Python (3.10)?", ConsoleColor.Yellow))
                     installProgram("https://www.python.org/ftp/python/3.10.10/python-3.10.10-embed-amd64.zip", pypath.Substring(0, pypath.Length-10), "Python", true);
@@ -1410,18 +1405,27 @@ namespace YunOS
         {
             WebClient client = new WebClient();
             Console.Write($"Downloading {name}...");
-            client.DownloadFile(url, $"{temppath}\\{zip ? "zip" : "exe"}");
+            
+            string destination = temppath + "\\temp.zip";
+            if(!zip) destination = $"{path}\\{name}.exe";
+
+            client.DownloadFile(url, destination);
             while (client.IsBusy)
             {
                 Console.Write(".");
                 Thread.Sleep(100);
             }
-            Console.WriteLine($"\nExtracting {name}...");
-            ZipFile.ExtractToDirectory(temppath + "\\temp.zip", path);
-            Console.WriteLine($"Finished Installing {name}!");
-            try { File.Delete(temppath + "\\temp.zip"); }
-            catch (Exception e) { throwError(e.Message); }
+            
             client.Dispose();
+
+            if(zip)
+            {
+                Console.Write($"\nExtracting {name}...");
+                ZipFile.ExtractToDirectory(temppath + "\\temp.zip", path);
+                try { File.Delete(temppath + "\\temp.zip"); }
+                catch (Exception e) { throwError(e.Message); }
+            }
+            Console.WriteLine($"\nFinished Installing {name}!");
         }
 
         static void runProcess(string program, string path, bool announceExit = true)
