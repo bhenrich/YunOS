@@ -13,3 +13,18 @@ E:\C# To-Go\YunOS\obj\Debug\net7.0\refint\YunOS.dll
 E:\C# To-Go\YunOS\obj\Debug\net7.0\YunOS.pdb
 E:\C# To-Go\YunOS\obj\Debug\net7.0\YunOS.genruntimeconfig.cache
 E:\C# To-Go\YunOS\obj\Debug\net7.0\ref\YunOS.dll
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\obj\Debug\net7.0\YunOS.csproj.AssemblyReference.cache
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\obj\Debug\net7.0\YunOS.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\obj\Debug\net7.0\YunOS.AssemblyInfoInputs.cache
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\obj\Debug\net7.0\YunOS.AssemblyInfo.cs
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\obj\Debug\net7.0\YunOS.csproj.CoreCompileInputs.cache
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\obj\Debug\net7.0\YunOS.dll
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\obj\Debug\net7.0\refint\YunOS.dll
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\obj\Debug\net7.0\YunOS.pdb
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\bin\Debug\net7.0\YunOS.exe
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\bin\Debug\net7.0\YunOS.deps.json
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\bin\Debug\net7.0\YunOS.runtimeconfig.json
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\bin\Debug\net7.0\YunOS.dll
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\bin\Debug\net7.0\YunOS.pdb
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\obj\Debug\net7.0\YunOS.genruntimeconfig.cache
+C:\Users\Benja\Desktop\Code\.git-clones\YunOS\obj\Debug\net7.0\ref\YunOS.dll

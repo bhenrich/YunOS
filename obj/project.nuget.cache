@@ -1,12 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "aYpihij9yxFoVH0YHjvoQ7jjuAMpiy31iT/qLAdyt3BCpWNfLYmp3LdTpkBcr0e7ki8vI4fmgV6iTDH3XPdqXQ==",
+  "dgSpecHash": "k7Voz8LE8RhEv14K+wQD02bKqaiwvm3l7if6IHA6Y1BmD8jnsxVZHzKztIhFRo5+P2jUBthz3Nn5LuOjsQDn4Q==",
   "success": true,
   "projectFilePath": "C:\\Users\\Benja\\Desktop\\Code\\.git-clones\\YunOS\\YunOS.csproj",
-  "expectedPackageFiles": [
-    "C:\\Users\\Benja\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\7.0.4\\microsoft.netcore.app.runtime.win-x64.7.0.4.nupkg.sha512",
-    "C:\\Users\\Benja\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\7.0.4\\microsoft.windowsdesktop.app.runtime.win-x64.7.0.4.nupkg.sha512",
-    "C:\\Users\\Benja\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\7.0.4\\microsoft.aspnetcore.app.runtime.win-x64.7.0.4.nupkg.sha512"
-  ],
+  "expectedPackageFiles": [],
   "logs": []
 }
