@@ -1,2 +1,0 @@
-E:\C# To-Go\YunOS\bin\Debug\net7.0\win-x64\publish\YunOS.pdb
-E:\C# To-Go\YunOS\bin\Debug\net7.0\win-x64\publish\YunOS.exe
