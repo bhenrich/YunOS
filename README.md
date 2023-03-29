@@ -39,7 +39,7 @@ This project has been made by Benjamin "YuNii" Henrich, with numerous contributi
 - YunOS comes with optional support for Python, NodeJS and the CLI-Based Text Editor Nano. YunOS will ask you if you want to install those during the first time setup. I recommend installing them, since it doesn't take long, doesn't take up a lot of space and for now you cannot install them later without first re-installing YunOS.
 - YunOS will create it's enviroment in the "C:\" root of your Windows OS Drive.
 
-### Should you run into any problems during the install process, or while using YunOS, write an [E-Mail to our support](mailto://support@yuniiworks.de).
+### Should you run into any problems during the install process, or while using YunOS, write an [E-Mail to our support](mailto://support@yuniiworks.de) or [create an Issue in the Repository](https://github.com/bhenrich/YunOS/issues/new/choose). We would be happy to help!
 
 ---
 ## Changelog & Roadmap
