@@ -50,5 +50,9 @@ This project has been made by Benjamin "YuNii" Henrich, with numerous contributi
 - Support for Debian-based Linux Distributions as a host system
 - Support for the winget/apt package manager to install any cli-software to YunOS
 
+### 03/28/2023 - v0.1.1
+- Added Fail Safes for the 'newuser' and 'remuser' commands
+- Updated the first time setup completion message to improve readability
+
 ### 03/23/2023 - v0.1
 - First release of YunOS.
