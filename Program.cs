@@ -282,19 +282,21 @@ namespace YunOS
         static void parseInput(string input)
         {
             string[] args = input.Split(' ');
+            string cmd = args[0];
+            args = args.Skip(1).ToArray();
 
-            if(!commands.ContainsKey(args[0]))
+            if(!commands.ContainsKey(cmd))
         	{
-                if (File.Exists(args[0]))
+                if (File.Exists(cmd))
                 {
-                    var proc = Process.Start($"{Directory.GetCurrentDirectory() + "\\" + args[0]}");
+                    var proc = Process.Start($"{Directory.GetCurrentDirectory() + "\\" + cmd}");
                     proc.WaitForExit();
                 }
                 else
-                    throwError($"{args[0]} is not a recognized command - see 'help'.");
+                    throwError($"{cmd} is not a recognized command - see 'help'.");
             }
 
-            switch (args[0])
+            switch (cmd)
             {
                 case "help":
                     Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -314,14 +316,14 @@ namespace YunOS
                     Console.ResetColor();
                     break;
                 case "man":
-                    if (args.Length > 1)
+                    if (args.Length == 1)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.WriteLine();
 
-                        if(commands.ContainsKey(args[1]))
+                        if(commands.ContainsKey(args[0]))
                         {
-                            string description = commands[args[1]];
+                            string description = commands[args[0]];
                             string usage = null;
                             if (description.Contains("%"))
                             {
@@ -329,14 +331,14 @@ namespace YunOS
                                 description = description.Split("%")[0];
                             }
 
-                            Console.WriteLine($"{args[1]} - {description}");
+                            Console.WriteLine($"{args[0]} - {description}");
                             if(usage != null) Console.WriteLine($"Usage: {usage}");
                             Console.WriteLine();
                             Console.ResetColor();
                             break;
                         }
 
-                        switch (args[1])
+                        switch (args[0])
                         {
                             case "math":
                                 Console.WriteLine("math - Performs a math operation");
@@ -362,9 +364,9 @@ namespace YunOS
                     }
                     break;
                 case "newuser":
-                    if(args.Length > 2)
+                    if(args.Length == 2)
                     {
-                        if (!userExists(args[1])) {
+                        if (!userExists(args[0])) {
                             Console.WriteLine("Please enter a Password for your new User: ");
                             StringBuilder passwordBuilder = new StringBuilder();
                             bool reading = true;
@@ -387,7 +389,7 @@ namespace YunOS
                                         break;
                                 }
                             }
-                            createUser(args[1], ShaEncrypt(passwordBuilder.ToString()).ToString());
+                            createUser(args[0], ShaEncrypt(passwordBuilder.ToString()).ToString());
                             throwSuccess("User has been created.");
                         }
                         else
@@ -398,12 +400,12 @@ namespace YunOS
                     break;
 
                 case "remuser":
-                    if(args.Length > 1)
+                    if(args.Length == 1)
                     {
                         // Prevent Self-Deletion
-                        if (userExists(args[1]) && _username != args[1])
+                        if (userExists(args[0]) && _username != args[0])
                         {
-                            if(!deleteUser(args[1]))
+                            if(!deleteUser(args[0]))
                             {
                                 throwError("User partially deleted. Some files may be in use.");
                                 break;
@@ -425,15 +427,15 @@ namespace YunOS
                     Console.Clear();
                     break;
                 case "echo":
-                    if (args.Length > 1)
+                    if (args.Length > 0)
                     {
-                        if (args[1].StartsWith("$") && args.Length == 2)
+                        if (args[0].StartsWith("$") && args.Length == 1)
                         {
                             Console.WriteLine(cache[Int16.Parse(args[1].Substring(1))]);
                         }
                         else
                         {
-                            for (int i = 1; i < args.Length; i++)
+                            for (int i = 0; i < args.Length; i++)
                             {
                                 Console.Write(args[i] + " ");
                             }
@@ -446,11 +448,11 @@ namespace YunOS
                     }
                     break;
                 case "sha":
-                    if (args.Length > 2)
+                    if (args.Length > 1)
                     {
-                        for (int i = 1; i < args.Length; i++)
+                        for (int i = 0; i < args.Length; i++)
                         {
-                            cache[Int16.Parse(args[1])] += ShaEncrypt(args[i]).ToLower() + " ";
+                            cache[Int16.Parse(args[0])] += ShaEncrypt(args[i]).ToLower() + " ";
                         }
                     }
                     else
@@ -459,9 +461,9 @@ namespace YunOS
                     }
                     break;
                 case "mkdir":
-                    if (args.Length > 1)
+                    if (args.Length > 0)
                     {
-                        for (int i = 1; i < args.Length; i++)
+                        for (int i = 0; i < args.Length; i++)
                         {
                             Directory.CreateDirectory(args[i]);
                         }
@@ -472,9 +474,9 @@ namespace YunOS
                     }
                     break;
                 case "rmdir":
-                    if (args.Length > 1)
+                    if (args.Length > 0)
                     {
-                        for (int i = 1; i < args.Length; i++)
+                        for (int i = 0; i < args.Length; i++)
                         {
                             Directory.Delete(args[i], true);
                         }
@@ -485,14 +487,14 @@ namespace YunOS
                     }
                     break;
                 case "cd":
-                    if (args.Length > 1)
+                    if (args.Length > 0)
                     {
                         // make sure the directory starts with C:\\yunos
-                        if (args[1].StartsWith("C:\\yunos"))
+                        if (args[0].StartsWith("C:\\yunos"))
                         {
-                            Directory.SetCurrentDirectory(args[1]);
+                            Directory.SetCurrentDirectory(args[0]);
                         }
-                        else if (args[1] == "..")
+                        else if (args[0] == "..")
                         {
                             string path = Directory.GetCurrentDirectory();
                             string[] pathSplit = path.Split("\\");
@@ -507,7 +509,7 @@ namespace YunOS
                         {
                             try
                             {
-                                Directory.SetCurrentDirectory(Directory.GetCurrentDirectory() + "\\" + args[1]);
+                                Directory.SetCurrentDirectory(Directory.GetCurrentDirectory() + "\\" + args[0]);
                             }
                             catch (Exception e)
                             {
@@ -538,9 +540,9 @@ namespace YunOS
                     Console.WriteLine();
                     break;
                 case "rm":
-                    if (args.Length > 1)
+                    if (args.Length > 0)
                     {
-                        for (int i = 1; i < args.Length; i++)
+                        for (int i = 0; i < args.Length; i++)
                         {
                             File.Delete(args[i]);
                         }
@@ -551,9 +553,9 @@ namespace YunOS
                     }
                     break;
                 case "touch":
-                    if (args.Length > 1)
+                    if (args.Length > 0)
                     {
-                        for (int i = 1; i < args.Length; i++)
+                        for (int i = 0; i < args.Length; i++)
                         {
                             File.Create(args[i]).Close();
                         }
@@ -564,15 +566,15 @@ namespace YunOS
                     }
                     break;
                 case "cat":
-                    if (args.Length > 1)
+                    if (args.Length > 0)
                     {
-                        if (File.Exists(args[1]))
+                        if (File.Exists(args[0]))
                         {
-                            Console.WriteLine(File.ReadAllText(args[1]));
+                            Console.WriteLine(File.ReadAllText(args[0]));
                         }
                         else
                         {
-                            throwError("File not found!");
+                            throwError("File not found.");
                         }
                     }
                     else
@@ -581,10 +583,10 @@ namespace YunOS
                     }
                     break;
                 case "store":
-                    if (args.Length > 2)
+                    if (args.Length == 2)
                     {
-                        string key = args[1];
-                        string value = args[2];
+                        string key = args[0];
+                        string value = args[1];
                         cache[Int16.Parse(key)] = value;
                     }
                     else
@@ -593,9 +595,9 @@ namespace YunOS
                     }
                     break;
                 case "read":
-                    if (args.Length > 1)
+                    if (args.Length == 1)
                     {
-                        string key = args[1];
+                        string key = args[0];
                         Console.WriteLine(cache[Int16.Parse(key)]);
                     }
                     else
@@ -604,17 +606,18 @@ namespace YunOS
                     }
                     break;
                 case "write":
+                    // YuNii = DUMMY
                     if (args.Length > 2)
                     {
-                        string file = args[1];
-                        string text = args[2];
+                        string file = args[0];
+                        string text = args[1];
                         if (text.StartsWith("$"))
                         {
                             text = cache[Int16.Parse(text.Substring(1))];
                         }
                         else
                         {
-                            for (int i = 3; i < args.Length; i++)
+                            for (int i = 2; i < args.Length; i++)
                             {
                                 text += " " + args[i];
                             }
@@ -628,17 +631,18 @@ namespace YunOS
                     }
                     break;
                 case "append":
+                    // YuNii = DUMMY
                     if (args.Length > 2)
                     {
-                        string file = args[1];
-                        string text = args[2];
+                        string file = args[0];
+                        string text = args[1];
                         if (text.StartsWith("$"))
                         {
                             text = cache[Int16.Parse(text.Substring(1))];
                         }
                         else
                         {
-                            for (int i = 3; i < args.Length; i++)
+                            for (int i = 2; i < args.Length; i++)
                             {
                                 text += " " + args[i];
                             }
@@ -652,10 +656,10 @@ namespace YunOS
                     }
                     break;
                 case "cp":
-                    if (args.Length > 2)
+                    if (args.Length == 2)
                     {
-                        string source = args[1];
-                        string destination = args[2];
+                        string source = args[0];
+                        string destination = args[1];
                         File.Copy(source, destination);
                     }
                     else
@@ -664,84 +668,55 @@ namespace YunOS
                     }
                     break;
                 case "edit":
-                    if (args.Length > 1)
-                        runProcess(nanopath, args[1], false);
+                    if (args.Length == 1)
+                        runProcess(nanopath, args[0], false);
                     else
                         throwError("No filename given - see 'man edit'");
                     break;
-                case "python":
-                    if (args.Length > 1)
-                    {
-                        if (File.Exists(args[1]))
-                        {
-                            var proc = Process.Start($"{pypath}", $"\"{Directory.GetCurrentDirectory() + "\\" + args[1]}\"");
-                            proc.WaitForExit();
-                            var exitCode = proc.ExitCode;
-                        }
-                        else
-                        {
-                            throwError("File not found!");
-                        }
-                    }
-                    break;
                 case "node":
-                    if (args.Length > 1)
+                case "python":
+                    if (args.Length == 1)
                     {
-                        if (File.Exists(args[1]))
-                        {
-                            var proc = Process.Start($"{nodepath}", $"\"{Directory.GetCurrentDirectory() + "\\" + args[1]}\"");
-                            proc.WaitForExit();
-                            var exitCode = proc.ExitCode;
-                        }
+                        if (File.Exists(args[0]))
+                            runProcess((cmd == "node" ? nodepath : pypath), $"\"{Directory.GetCurrentDirectory() + "\\" + args[0]}\"");
                         else
-                        {
-                            throwError("File not found!");
-                        }
-
-                    }
-                    break;
-                case "mv":
-                    if (args.Length > 2)
-                    {
-                        string source = args[1];
-                        string destination = args[2];
-                        File.Move(source, destination);
+                            throwError("File not found.");
                     }
                     else
-                    {
-                        throwError("Not enough arguments given - see 'man mv'");
-                    }
+                        // Interactive Shell
+                        runProcess(cmd,null,true);
                     break;
                 case "rename":
-                    if (args.Length > 2)
+                case "mv":
+                    if (args.Length == 2)
                     {
-                        string source = args[1];
-                        string destination = args[2];
+                        string source = args[0];
+                        string destination = args[1];
                         File.Move(source, destination);
                     }
                     else
                     {
-                        throwError("Not enough arguments given - see 'man rename'");
+                        throwError($"Not enough arguments given - see 'man {cmd}'");
                     }
                     break;
                 case "pwd":
-                    if (args.Length > 1) { cache[Int16.Parse(args[1])] = Directory.GetCurrentDirectory().Substring(3); }
+                    if (args.Length == 1) { cache[Int16.Parse(args[0])] = Directory.GetCurrentDirectory().Substring(3); }
                     else
                         Console.WriteLine(Directory.GetCurrentDirectory().Substring(3));
                     break;
                 case "date":
-                    if (args.Length > 1) { cache[Int16.Parse(args[1])] = DateTime.Now.ToString(); }
+                    if (args.Length == 1) { cache[Int16.Parse(args[0])] = DateTime.Now.ToString(); }
                     else
                         Console.WriteLine(DateTime.Now.ToString());
                     break;
                 case "run":
-                    if (args.Length > 1 && args[1].EndsWith(".yun"))
-                        runApplet(args[1]);
+                    if (args.Length == 1 && args[0].EndsWith(".yun"))
+                        runApplet(args[0]);
                     else
-                        throwError("No file specified.");
+                        throwError("No file specified or File is not a .yun File.");
                     break;
                 case "reset":
-                    if (args.Length == 2 && args[1].ToLower().Equals("confirm")) {
+                    if (args.Length == 1 && args[0].ToLower().Equals("confirm")) {
                         Directory.SetCurrentDirectory("C:\\");
                         Directory.Delete(syspath, true);
                         Console.WriteLine("Deleting C:\\yunos\\... See you next time!");
